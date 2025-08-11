@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📷 Camera Test - Mausam Mitra</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #E8F5E8 0%, #F1F8E9 100%);
+        }
+        .test-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .camera-btn {
+            background: #00ACC1;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .camera-btn:hover {
+            background: #00838F;
+            transform: translateY(-2px);
+        }
+        .camera-btn.active {
+            background: #2E7D32;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        #video {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border-radius: 10px;
+            background: #000;
+            margin: 20px 0;
+        }
+        #canvas {
+            display: none;
+        }
+        .captured-image {
+            max-width: 500px;
+            width: 100%;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .status {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            width: 100%;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .feature-list li:before {
+            content: "✅ ";
+            color: #2E7D32;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>📷 Camera Integration Test</h1>
+        <p>Test the camera functionality for crop image analysis</p>
+        
+        <div id="compatibility" class="status info">
+            Checking camera support...
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>📹 Live Camera Test</h2>
+        <p>Test live camera access and photo capture:</p>
+        
+        <div class="controls">
+            <button id="startCamera" class="camera-btn" onclick="startCamera()">
+                📹 Start Camera
+            </button>
+            <button id="capturePhoto" class="camera-btn" onclick="capturePhoto()" disabled>
+                📸 Capture Photo
+            </button>
+            <button id="stopCamera" class="camera-btn" onclick="stopCamera()" disabled>
+                ⏹️ Stop Camera
+            </button>
+        </div>
+        
+        <video id="video" autoplay playsinline style="display: none;"></video>
+        <canvas id="canvas"></canvas>
+        <div id="capturedImages"></div>
+        
+        <div id="cameraStatus" class="status">
+            Camera not started
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>🖼️ File Upload Test</h2>
+        <p>Test image upload from gallery:</p>
+        
+        <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
+        <div id="uploadedImages"></div>
+        
+        <div id="uploadStatus" class="status">
+            No file selected
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>🔍 Image Analysis Simulation</h2>
+        <p>Simulate AI image analysis:</p>
+        
+        <button class="camera-btn" onclick="simulateAnalysis()">
+            🤖 Simulate AI Analysis
+        </button>
+        
+        <div id="analysisResult" class="status" style="display: none;">
+            <!-- Analysis result will appear here -->
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>📱 Features Supported</h2>
+        <ul class="feature-list">
+            <li>Live camera access with environment camera preference</li>
+            <li>Photo capture with high resolution (1280x720)</li>
+            <li>Gallery image selection</li>
+            <li>Base64 image encoding for API transmission</li>
+            <li>Mobile-responsive camera interface</li>
+            <li>Multi-language support for camera UI</li>
+            <li>Automatic camera permission handling</li>
+            <li>Image preview and retake functionality</li>
+        </ul>
+    </div>
+
+    <script>
+        let stream = null;
+        let captureCount = 0;
+
+        function checkCompatibility() {
+            const compatDiv = document.getElementById('compatibility');
+            let html = '<h3>Camera Support Status:</h3>';
+            
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                html += '<p>📹 Camera Access: <span style="color: green;">✅ Supported</span></p>';
+            } else {
+                html += '<p>📹 Camera Access: <span style="color: red;">❌ Not Supported</span></p>';
+            }
+            
+            if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+                html += '<p>📱 Device Enumeration: <span style="color: green;">✅ Supported</span></p>';
+            } else {
+                html += '<p>📱 Device Enumeration: <span style="color: red;">❌ Not Supported</span></p>';
+            }
+            
+            html += '<p><strong>Recommended:</strong> Use HTTPS for camera access</p>';
+            html += '<p><strong>Mobile:</strong> Works on iOS Safari, Android Chrome</p>';
+            
+            compatDiv.innerHTML = html;
+        }
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment', // Prefer back camera
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.style.display = 'block';
+                
+                document.getElementById('startCamera').disabled = true;
+                document.getElementById('capturePhoto').disabled = false;
+                document.getElementById('stopCamera').disabled = false;
+                document.getElementById('startCamera').classList.add('active');
+                
+                document.getElementById('cameraStatus').textContent = 'Camera started successfully';
+                document.getElementById('cameraStatus').className = 'status success';
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                document.getElementById('cameraStatus').textContent = 'Camera access denied: ' + error.message;
+                document.getElementById('cameraStatus').className = 'status error';
+            }
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            captureCount++;
+            const img = document.createElement('img');
+            img.src = imageData;
+            img.className = 'captured-image';
+            img.alt = `Captured photo ${captureCount}`;
+            
+            const container = document.getElementById('capturedImages');
+            container.appendChild(img);
+            
+            document.getElementById('cameraStatus').textContent = `Photo ${captureCount} captured successfully`;
+            document.getElementById('cameraStatus').className = 'status success';
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            document.getElementById('video').style.display = 'none';
+            document.getElementById('startCamera').disabled = false;
+            document.getElementById('capturePhoto').disabled = true;
+            document.getElementById('stopCamera').disabled = true;
+            document.getElementById('startCamera').classList.remove('active');
+            
+            document.getElementById('cameraStatus').textContent = 'Camera stopped';
+            document.getElementById('cameraStatus').className = 'status info';
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'captured-image';
+                img.alt = 'Uploaded image';
+                
+                const container = document.getElementById('uploadedImages');
+                container.innerHTML = ''; // Clear previous
+                container.appendChild(img);
+                
+                document.getElementById('uploadStatus').textContent = `File uploaded: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+                document.getElementById('uploadStatus').className = 'status success';
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function simulateAnalysis() {
+            const analysisDiv = document.getElementById('analysisResult');
+            analysisDiv.style.display = 'block';
+            analysisDiv.className = 'status info';
+            analysisDiv.innerHTML = '<p>🔄 Analyzing image...</p>';
+            
+            setTimeout(() => {
+                analysisDiv.className = 'status success';
+                analysisDiv.innerHTML = `
+                    <h3>🤖 AI Analysis Result (Simulated)</h3>
+                    <p><strong>Crop Identified:</strong> Wheat (गेहूं)</p>
+                    <p><strong>Issue Detected:</strong> Leaf yellowing - possible nitrogen deficiency</p>
+                    <p><strong>Recommendations:</strong></p>
+                    <ul>
+                        <li>Apply balanced NPK fertilizer (19:19:19)</li>
+                        <li>Increase irrigation frequency</li>
+                        <li>Monitor for pest infestation</li>
+                        <li>Consider soil testing</li>
+                    </ul>
+                    <p><strong>Confidence:</strong> 85%</p>
+                `;
+            }, 2000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkCompatibility();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>

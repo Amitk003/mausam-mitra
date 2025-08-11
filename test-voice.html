@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 Voice Test - Mausam Mitra</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #E8F5E8 0%, #F1F8E9 100%);
+        }
+        .test-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .voice-btn {
+            background: #FF8F00;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .voice-btn:hover {
+            background: #F57C00;
+            transform: translateY(-2px);
+        }
+        .voice-btn.listening {
+            background: #E53E3E;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            min-height: 50px;
+        }
+        .speak-btn {
+            background: #2E7D32;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .language-selector {
+            margin: 20px 0;
+        }
+        .language-selector select {
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>🎤 Voice Integration Test</h1>
+        <p>Test the voice functionality of Mausam Mitra</p>
+        
+        <div class="language-selector">
+            <label>Select Language: </label>
+            <select id="languageSelect" onchange="changeLanguage()">
+                <option value="hi">हिंदी (Hindi)</option>
+                <option value="en">English</option>
+                <option value="mr">मराठी (Marathi)</option>
+                <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>🎙️ Speech-to-Text Test</h2>
+        <p>Click the microphone and speak in your selected language:</p>
+        <button id="voiceBtn" class="voice-btn" onclick="toggleVoiceInput()">
+            🎤 Start Voice Input
+        </button>
+        <div class="result" id="speechResult">Your speech will appear here...</div>
+    </div>
+
+    <div class="test-card">
+        <h2>🔊 Text-to-Speech Test</h2>
+        <p>Click buttons to hear text in different languages:</p>
+        
+        <div>
+            <button class="speak-btn" onclick="speakText('नमस्ते! मैं मौसम मित्र हूं। मैं आपकी खेती में मदद कर सकता हूं।', 'hi')">
+                🔊 Hindi Sample
+            </button>
+            <button class="speak-btn" onclick="speakText('Hello! I am Mausam Mitra. I can help you with farming.', 'en')">
+                🔊 English Sample
+            </button>
+            <button class="speak-btn" onclick="speakText('नमस्कार! मी मौसम मित्र आहे। मी तुम्हाला शेतीमध्ये मदत करू शकतो.', 'mr')">
+                🔊 Marathi Sample
+            </button>
+            <button class="speak-btn" onclick="speakText('ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ਮੌਸਮ ਮਿੱਤਰ ਹਾਂ। ਮੈਂ ਤੁਹਾਨੂੰ ਖੇਤੀ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ।', 'pa')">
+                🔊 Punjabi Sample
+            </button>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>📱 Browser Compatibility</h2>
+        <div id="compatibility">
+            <p>Checking browser support...</p>
+        </div>
+    </div>
+
+    <script>
+        let recognition = null;
+        let synthesis = window.speechSynthesis;
+        let isListening = false;
+        let currentLanguage = 'hi';
+        let voices = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeVoice();
+            checkCompatibility();
+        });
+
+        function initializeVoice() {
+            // Speech Recognition
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+                
+                recognition.onstart = function() {
+                    isListening = true;
+                    updateVoiceButton();
+                };
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('speechResult').textContent = transcript;
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    document.getElementById('speechResult').textContent = 'Error: ' + event.error;
+                };
+                
+                recognition.onend = function() {
+                    isListening = false;
+                    updateVoiceButton();
+                };
+                
+                updateSpeechLanguage();
+            }
+            
+            // Speech Synthesis
+            if ('speechSynthesis' in window) {
+                loadVoices();
+                synthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function loadVoices() {
+            voices = synthesis.getVoices();
+        }
+
+        function changeLanguage() {
+            currentLanguage = document.getElementById('languageSelect').value;
+            updateSpeechLanguage();
+        }
+
+        function updateSpeechLanguage() {
+            if (!recognition) return;
+            
+            const languageMap = {
+                'hi': 'hi-IN',
+                'en': 'en-US',
+                'mr': 'mr-IN',
+                'pa': 'pa-IN'
+            };
+            
+            recognition.lang = languageMap[currentLanguage] || 'hi-IN';
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                alert('Voice input not supported in this browser');
+                return;
+            }
+            
+            if (isListening) {
+                recognition.stop();
+            } else {
+                document.getElementById('speechResult').textContent = 'Listening... Please speak';
+                recognition.start();
+            }
+        }
+
+        function updateVoiceButton() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            
+            if (isListening) {
+                voiceBtn.classList.add('listening');
+                voiceBtn.textContent = '🔴 Stop Listening';
+            } else {
+                voiceBtn.classList.remove('listening');
+                voiceBtn.textContent = '🎤 Start Voice Input';
+            }
+        }
+
+        function speakText(text, language) {
+            if (!synthesis || !text) return;
+            
+            synthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            const languageMap = {
+                'hi': 'hi-IN',
+                'en': 'en-US',
+                'mr': 'mr-IN',
+                'pa': 'pa-IN'
+            };
+            utterance.lang = languageMap[language] || 'hi-IN';
+            
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            
+            synthesis.speak(utterance);
+        }
+
+        function checkCompatibility() {
+            const compatDiv = document.getElementById('compatibility');
+            let html = '<h3>Browser Support Status:</h3>';
+            
+            html += '<p>🎤 Speech Recognition: ';
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                html += '<span style="color: green;">✅ Supported</span></p>';
+            } else {
+                html += '<span style="color: red;">❌ Not Supported</span></p>';
+            }
+            
+            html += '<p>🔊 Speech Synthesis: ';
+            if ('speechSynthesis' in window) {
+                html += '<span style="color: green;">✅ Supported</span></p>';
+            } else {
+                html += '<span style="color: red;">❌ Not Supported</span></p>';
+            }
+            
+            html += '<p><strong>Recommended Browsers:</strong> Chrome, Edge, Safari (latest versions)</p>';
+            html += '<p><strong>Note:</strong> Voice features work best with HTTPS and microphone permissions enabled.</p>';
+            
+            compatDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

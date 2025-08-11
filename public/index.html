@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌾 Mausam Mitra - AI Farming Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2E7D32">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Mausam Mitra">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    
+    <!-- Mobile optimizations -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Mausam Mitra">
+    <meta name="msapplication-TileColor" content="#2E7D32">
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🌾</span>
+                <h1>Mausam Mitra</h1>
+            </div>
+            <div class="language-selector">
+                <select id="languageSelect">
+                    <option value="hi">हिंदी</option>
+                    <option value="en">English</option>
+                    <option value="mr">मराठी</option>
+                    <option value="pa">ਪੰਜਾਬੀ</option>
+                </select>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Quick Actions -->
+            <section class="quick-actions">
+                <h2 id="quickActionsTitle">त्वरित सेवाएं</h2>
+                <div class="action-grid">
+                    <button class="action-card" onclick="showWeatherSection()">
+                        <span class="action-icon">🌤️</span>
+                        <span id="weatherAction">मौसम जानकारी</span>
+                    </button>
+                    <button class="action-card" onclick="showMandiSection()">
+                        <span class="action-icon">💰</span>
+                        <span id="mandiAction">मंडी भाव</span>
+                    </button>
+                    <button class="action-card" onclick="showFarmingSection()">
+                        <span class="action-icon">🌱</span>
+                        <span id="farmingAction">खेती सलाह</span>
+                    </button>
+                    <button class="action-card" onclick="showChatSection()">
+                        <span class="action-icon">💬</span>
+                        <span id="chatAction">AI सहायक</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Weather Section -->
+            <section id="weatherSection" class="content-section hidden">
+                <h2 id="weatherTitle">मौसम जानकारी</h2>
+                <div class="input-group">
+                    <input type="text" id="cityInput" placeholder="शहर का नाम दर्ज करें">
+                    <button onclick="getWeather()" id="getWeatherBtn">मौसम देखें</button>
+                </div>
+                <div id="weatherResult" class="result-container"></div>
+            </section>
+
+            <!-- Mandi Section -->
+            <section id="mandiSection" class="content-section hidden">
+                <h2 id="mandiTitle">मंडी भाव</h2>
+                <div class="input-group">
+                    <input type="text" id="commodityInput" placeholder="फसल का नाम दर्ज करें">
+                    <input type="text" id="stateInput" placeholder="राज्य का नाम दर्ज करें (वैकल्पिक)">
+                    <input type="text" id="districtInput" placeholder="जिले का नाम दर्ज करें (वैकल्पिक)">
+                    <button onclick="getMandiPrices()" id="getMandiBtn">भाव देखें</button>
+                </div>
+                <div id="mandiResult" class="result-container"></div>
+            </section>
+
+            <!-- Farming Section -->
+            <section id="farmingSection" class="content-section hidden">
+                <h2 id="farmingTitle">खेती सलाह</h2>
+                <div class="input-group">
+                    <input type="text" id="cropInput" placeholder="फसल का नाम दर्ज करें">
+                    <select id="seasonSelect">
+                        <option value="रबी">रबी</option>
+                        <option value="खरीफ">खरीफ</option>
+                        <option value="जायद">जायद</option>
+                    </select>
+                    <button onclick="getFarmingAdvice()" id="getFarmingBtn">सलाह लें</button>
+                </div>
+                <div id="farmingResult" class="result-container"></div>
+            </section>
+
+            <!-- Chat Section -->
+            <section id="chatSection" class="content-section hidden">
+                <h2 id="chatTitle">AI सहायक से बात करें</h2>
+                <div class="chat-container">
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" placeholder="अपना सवाल यहाँ लिखें...">
+                        <button onclick="toggleVoiceInput()" id="voiceBtn" class="voice-btn" title="Voice Input">
+                            <span id="voiceIcon">🎤</span>
+                        </button>
+                        <button onclick="toggleCamera()" id="cameraBtn" class="camera-btn" title="Camera Input">
+                            <span id="cameraIcon">📷</span>
+                        </button>
+                        <input type="file" id="imageInput" accept="image/*" capture="environment" style="display: none;" onchange="handleImageUpload(event)">
+                        <button onclick="sendMessage()" id="sendBtn">भेजें</button>
+                    </div>
+                    <div class="voice-controls">
+                        <button onclick="toggleAutoSpeak()" id="autoSpeakBtn" class="auto-speak-btn">
+                            <span id="speakIcon">🔇</span>
+                            <span id="speakText">Auto Speak: OFF</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-spinner hidden">
+            <div class="spinner"></div>
+            <p id="loadingText">कृपया प्रतीक्षा करें...</p>
+        </div>
+
+        <!-- Camera Modal -->
+        <div id="cameraModal" class="camera-modal hidden">
+            <div class="camera-container">
+                <div class="camera-header">
+                    <h3 id="cameraTitle">फसल की तस्वीर लें</h3>
+                    <button onclick="closeCameraModal()" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="camera-options">
+                    <button onclick="startLiveCamera()" id="liveCameraBtn" class="camera-option-btn">
+                        <i class="fas fa-video"></i>
+                        <span id="liveCameraText">लाइव कैमरा</span>
+                    </button>
+                    <button onclick="selectFromGallery()" id="galleryBtn" class="camera-option-btn">
+                        <i class="fas fa-images"></i>
+                        <span id="galleryText">गैलरी से चुनें</span>
+                    </button>
+                </div>
+
+                <!-- Live Camera View -->
+                <div id="liveCamera" class="live-camera hidden">
+                    <video id="cameraVideo" autoplay playsinline></video>
+                    <canvas id="cameraCanvas" style="display: none;"></canvas>
+                    <div class="camera-controls">
+                        <button onclick="capturePhoto()" id="captureBtn" class="capture-btn">
+                            <i class="fas fa-camera"></i>
+                            <span id="captureText">तस्वीर लें</span>
+                        </button>
+                        <button onclick="stopCamera()" id="stopCameraBtn" class="stop-camera-btn">
+                            <i class="fas fa-stop"></i>
+                            <span id="stopCameraText">बंद करें</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Image Preview -->
+                <div id="imagePreview" class="image-preview hidden">
+                    <img id="previewImage" alt="Captured image">
+                    <div class="image-actions">
+                        <input type="text" id="imageQuestion" placeholder="इस तस्वीर के बारे में पूछें...">
+                        <button onclick="analyzeImage()" id="analyzeBtn" class="analyze-btn">
+                            <i class="fas fa-search"></i>
+                            <span id="analyzeText">विश्लेषण करें</span>
+                        </button>
+                        <button onclick="retakePhoto()" id="retakeBtn" class="retake-btn">
+                            <i class="fas fa-redo"></i>
+                            <span id="retakeText">दोबारा लें</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Mausam Mitra - Mobile Test</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #E8F5E8 0%, #F1F8E9 100%);
+            min-height: 100vh;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: #2E7D32;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 20px auto;
+        }
+        .install-btn {
+            background: #2E7D32;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        .install-btn:hover {
+            background: #1B5E20;
+            transform: translateY(-2px);
+        }
+        .qr-code {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            color: #2E7D32;
+        }
+        .download-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .download-btn {
+            background: #FF8F00;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .download-btn:hover {
+            background: #F57C00;
+            transform: translateY(-1px);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <div class="app-icon">🌾</div>
+        <h1 style="text-align: center; margin: 0;">Mausam Mitra</h1>
+        <p style="text-align: center; color: #666;">AI Farming Assistant</p>
+        
+        <div id="installStatus" class="status info">
+            📱 Ready for mobile installation
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>🚀 Install Options</h2>
+        
+        <button id="installPWA" class="install-btn" onclick="installPWA()">
+            📱 Install as App (PWA)
+        </button>
+        
+        <div class="download-options">
+            <button class="download-btn" onclick="downloadAPK()">
+                🤖 Download APK
+            </button>
+            <button class="download-btn" onclick="openInBrowser()">
+                🌐 Open in Browser
+            </button>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>📱 Mobile Features</h2>
+        <ul class="feature-list">
+            <li>Voice input and output</li>
+            <li>Camera for crop analysis</li>
+            <li>Offline support</li>
+            <li>Multi-language interface</li>
+            <li>Weather information</li>
+            <li>Market prices</li>
+            <li>AI farming advice</li>
+            <li>Add to home screen</li>
+        </ul>
+    </div>
+
+    <div class="test-card">
+        <h2>🔗 Quick Access</h2>
+        <div class="qr-code">
+            <p>📱 Scan QR code on your phone:</p>
+            <div style="font-size: 100px; line-height: 1;">📱</div>
+            <p><strong>http://localhost:3000</strong></p>
+            <p style="font-size: 0.9rem; color: #666;">
+                Or type this URL in your phone browser
+            </p>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>📋 Installation Steps</h2>
+        <ol>
+            <li><strong>PWA Installation:</strong>
+                <ul>
+                    <li>Open app in Chrome/Edge</li>
+                    <li>Click "Install" button above</li>
+                    <li>Or use browser menu → "Add to Home Screen"</li>
+                </ul>
+            </li>
+            <li><strong>APK Installation:</strong>
+                <ul>
+                    <li>Download APK file</li>
+                    <li>Enable "Unknown Sources" in Android settings</li>
+                    <li>Install the APK file</li>
+                </ul>
+            </li>
+            <li><strong>Browser Access:</strong>
+                <ul>
+                    <li>Open http://localhost:3000</li>
+                    <li>Add bookmark to home screen</li>
+                    <li>Works like a native app</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <script>
+        let deferredPrompt;
+
+        // PWA install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installStatus').textContent = '✅ App ready to install!';
+            document.getElementById('installStatus').className = 'status success';
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        document.getElementById('installStatus').textContent = '🎉 App installed successfully!';
+                        document.getElementById('installStatus').className = 'status success';
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Fallback for browsers that don't support PWA install
+                alert('To install:\n1. Open browser menu\n2. Select "Add to Home Screen"\n3. Confirm installation');
+            }
+        }
+
+        function downloadAPK() {
+            // Check if APK exists
+            fetch('/android/app/build/outputs/apk/debug/app-debug.apk')
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/android/app/build/outputs/apk/debug/app-debug.apk';
+                    } else {
+                        alert('APK not built yet. Please run:\n1. setup-mobile.bat\n2. build-apk.bat\n\nOr use PWA installation instead.');
+                    }
+                })
+                .catch(() => {
+                    alert('APK not available. Please:\n1. Run build-apk.bat to generate APK\n2. Or use PWA installation\n3. Or open in browser');
+                });
+        }
+
+        function openInBrowser() {
+            window.open('http://localhost:3000', '_blank');
+        }
+
+        // Check if running on mobile
+        if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            document.getElementById('installStatus').textContent = '📱 Mobile device detected - ready to install!';
+            document.getElementById('installStatus').className = 'status success';
+        }
+
+        // Check if already installed
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            document.getElementById('installStatus').textContent = '✅ App is already installed!';
+            document.getElementById('installStatus').className = 'status success';
+            document.getElementById('installPWA').textContent = '🎉 Already Installed';
+            document.getElementById('installPWA').disabled = true;
+        }
+    </script>
+</body>
+</html>
